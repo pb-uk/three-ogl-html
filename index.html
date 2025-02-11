@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Three.js OBJ demo</title>
+
+<script type="importmap">
+	{
+		"imports": {
+			"three": "https://cdn.jsdelivr.net/npm/three@0.173.0/build/three.module.js",
+			"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.173.0/examples/jsm/"
+		}
+	}
+</script>
+
+</head>
+<body>
+<p style="text-align: center;"><a href="https://github.com/pb-uk/three-ogl-html">Source on GitHub</a></p>
+
+<div id="scene"	style="max-height: 75vh; aspect-ratio: 16 / 9; margin: auto"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// URL of the .obj file.
+const objUrl = './WaltHead.obj';
+
+// Get the target element and its dimensions.
+const $scene = document.getElementById('scene');
+const sceneHeight = $scene.clientHeight;
+const sceneWidth = $scene.clientWidth;
+
+// Set up the camera.
+const camera = new THREE.PerspectiveCamera(
+	45,
+	sceneWidth / sceneHeight,
+	0.1,
+	20,
+);
+camera.add(new THREE.PointLight(0xffffff, 15));
+camera.position.z = 2.5;
+
+// Set up the scene.
+const scene = new THREE.Scene();
+scene.add(new THREE.AmbientLight(0xffffff));
+scene.add(camera);
+
+// Set up the renderer.
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(sceneWidth, sceneHeight);
+$scene.appendChild(renderer.domElement);
+
+const render = () => renderer.render(scene, camera);
+
+// Set up the controls.
+const controls = new OrbitControls(camera, renderer.domElement);
+// controls.minDistance = 2;
+// controls.maxDistance = 5;
+controls.addEventListener('change', render);
+
+// Change everything when the window is resized.
+window.addEventListener('resize', () => {
+	const sceneHeight = $scene.clientHeight;
+	const sceneWidth = $scene.clientWidth;
+
+	camera.aspect = sceneWidth / sceneHeight;
+	camera.updateProjectionMatrix();
+
+	renderer.setSize(sceneWidth, sceneHeight);
+	render();
+});
+
+// Event handlers for loading.
+const onProgress = (xhr) => {
+	if (xhr.lengthComputable) {
+		const percentComplete = (xhr.loaded / xhr.total) * 100;
+		console.log(`model ${percentComplete.toFixed(0)}% downloaded`);
+	}
+};
+
+const onError = (e) => {
+	console.log(`Error loading model: ${e}`, e);
+};
+
+// This will hold the object once it has been loaded.
+let object;
+
+// Create the loader.
+const manager = new THREE.LoadingManager();
+const loader = new OBJLoader(manager);
+manager.onLoad = () => {
+	object.position.y = -0.8;
+	object.scale.setScalar(0.0225);
+	scene.add(object);
+
+	render();
+};
+
+// At last we can load the object file!
+loader.load(objUrl, (obj) => (object = obj), onProgress, onError);
+
+</script>
+
+</body>
+</html>
